@@ -1,0 +1,30 @@
+{
+  "name": "s3-mongo-restore",
+  "version": "1.0.0",
+  "description": "Restore MongoDB Backups stored on S3 with a (Optional) Web GUI",
+  "main": "restore.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ishanjain28/s3-mongo-restore.git"
+  },
+  "keywords": [
+    "GUI",
+    "Mongodb",
+    "S3",
+    "Restore",
+    "Backup"
+  ],
+  "author": "Ishan Jain <github.com/ishanjain28>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ishanjain28/s3-mongo-restore/issues"
+  },
+  "homepage": "https://github.com/ishanjain28/s3-mongo-restore#readme",
+  "dependencies": {
+    "aws-sdk": "^2.45.0",
+    "commander": "^2.9.0"
+  }
+}

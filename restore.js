@@ -1,8 +1,14 @@
-const AWS = require('aws-sdk'),
-  fs = require('fs');
+const fs = require('fs'),
+  os = require('os'),
+  path = require('path'),
+  AWS = require('aws-sdk'),
+  MongoDBURI = require('mongodb-uri');
 
 function ValidateConfig(config) {
-  if (config && config.mongodb && config.mongodb.host && config.mongodb.name && config.s3 && config.s3.accessKey && config.s3.secretKey && config.s3.region && config.s3.bucketName) {
+  if (config && config.mongodb && config.s3 && config.s3.accessKey && config.s3.secretKey && config.s3.region && config.s3.bucketName) {
+
+    config.mongodb = MongoDBURI.parse(config.mongodb);
+
     return true;
   }
   return false;
@@ -22,7 +28,7 @@ function fetchObjectsFromBucket(s3, config) {
   return new Promise((resolve, reject) => {
     s3.listObjects({
       Bucket: config.s3.bucketName,
-      Prefix: config.mongodb.name
+      Prefix: config.mongodb.database
     }, (err, data) => {
       if (err) {
         reject(err)
@@ -45,11 +51,16 @@ function downloadBackup(s3, config, backupKey) {
       if (err) {
         reject({error: 1, message: err.message, code: err.code})
       } else {
-        resolve({error: 0, Body: data.Body, Length: data.ContentLength})
-      }
+        let stream = fs.createWriteStream(path.resolve(os.tmpdir(), backupKey));
+        stream.write(data.Body);
+
+        console.log(os.freemem() / 1024 / 1024)
+        //TODO:return an error if space available on disk is less than backup size
+        resolve({error: 0, Body: data.Body, Length: data.ContentLength});
+      };
     });
-  });
-}
+  })
+};
 
 function RestoreBackup(config, databaseToRestore) {
   let isValidConfig = ValidateConfig(config);

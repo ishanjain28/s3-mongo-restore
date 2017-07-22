@@ -26,27 +26,37 @@ const cli = meow(`
   string: ["accessKey", "uri", "secretKey", "bucketName"]
 })
 
+let config = {};
+
 function listBackups(backups, flags) {
   inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 
   return inquirer.prompt([
     {
-      name: "backups",
-      message: "Available Backups on S3",
+      name: "backup",
+      message: "Search in Available Backups on S3",
       type: "autocomplete",
-      pageSize: 5,
+      pageSize: 7,
       source: (ans, input) => Promise
         .resolve()
         .then(() => filterBackups(input, backups, flags))
     }
   ]).then(answer => {
-    console.log(answer)
-    return
-  })
+
+    // Start Download backup, Check for space before downloading
+    S3Restore
+      .Restore(config, answer.backup)
+      .then(result => {
+        console.log(`${result.message} ${result.backupName}`)
+      }, error => {
+        console.error(error)
+      })
+
+  });
 }
 
 function filterBackups(input, backups) {
-  
+
   return backups.filter(backup => {
     if (!input) {
       return true;
@@ -56,14 +66,15 @@ function filterBackups(input, backups) {
       return true
     }
     return false;
-  }).map(backup => {
-    const {Key, Size} = backup;
-    const lineLength = process.stdout.columns || 80;
-    const margins = 4 + backup.Key.length;
-    const length = lineLength - margins;
+  }).map((backup, index) => {
+    const Key = backup.Key,
+      Size = (backup.Size / (1024 * 1024)).toFixed(6),
+      lineLength = process.stdout.columns || 80,
+      margins = 4 + backup.Key.length,
+      length = lineLength - margins;
 
     return {
-      name: `${Key} ${chalk.dim(Size)}`,
+      name: `${index + 1}. ${Key} ${chalk.dim(Size)}MiB`,
       value: Key
     }
   })
@@ -77,7 +88,7 @@ function init(flags) {
 
   if (u && a && s && b && r) {
 
-    let config = {
+    config = {
       mongodb: u,
       s3: {
         secretKey: s,

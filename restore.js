@@ -1,13 +1,17 @@
 const fs = require('fs'),
   os = require('os'),
   path = require('path'),
+  exec = require('child_process').exec,
   AWS = require('aws-sdk'),
   MongoDBURI = require('mongodb-uri');
 
 function ValidateConfig(config) {
   if (config && config.mongodb && config.s3 && config.s3.accessKey && config.s3.secretKey && config.s3.region && config.s3.bucketName) {
 
-    config.mongodb = MongoDBURI.parse(config.mongodb);
+    // Check if the url isn't parsed already
+    if (!(config.mongodb.scheme && config.mongodb.hosts)) {
+      config.mongodb = MongoDBURI.parse(config.mongodb);
+    }
 
     return true;
   }
@@ -24,11 +28,11 @@ function AWSSetup(config) {
 }
 
 // Fetches All the keys in Database that start with database name
-function fetchObjectsFromBucket(s3, config) {
+function listObjectsInBucket(s3, config) {
   return new Promise((resolve, reject) => {
     s3.listObjects({
       Bucket: config.s3.bucketName,
-      Prefix: config.mongodb.database
+      // Prefix: config.mongodb.database
     }, (err, data) => {
       if (err) {
         reject(err)
@@ -39,7 +43,43 @@ function fetchObjectsFromBucket(s3, config) {
   });
 }
 
-function restore(config) {}
+function restore(config, filePath) {
+
+  return new Promise((resolve, reject) => {
+
+    const database = config.mongodb.database,
+      password = config.mongodb.password || null,
+      username = config.mongodb.username || null,
+      host = config.mongodb.hosts[0].host || null,
+      port = config.mongodb.hosts[0].port || null;
+
+    // Default command, does not considers username or password
+    let command = `mongorestore -h ${host} --port=${port} -d ${database} --gzip --archive=${filePath}`;
+
+    // When Username and password is provided
+    if (username && password) {
+      command = `mongorestore -h ${host} --port=${port} -d ${database} -p ${password} -u ${username} --gzip --archive=${filePath}`;
+    }
+    // When Username is provided
+    if (username && !password) {
+      command = `mongorestore -h ${host} --port=${port} -d ${database} -u ${username} --gzip --archive=${filePath}`;
+    }
+
+    exec(command, (err, stdout, stderr) => {
+      if (err) {
+        // Most likely, mongodump isn't installed or isn't accessible
+        reject({error: 1, message: err.message, code: err.code});
+      } else {
+        resolve({
+          error: 0,
+          message: "Successfuly Restored Backup",
+          backupName: path.basename(filePath)
+        });
+      }
+    });
+  });
+
+}
 
 function downloadBackup(s3, config, backupKey) {
 
@@ -52,11 +92,19 @@ function downloadBackup(s3, config, backupKey) {
         reject({error: 1, message: err.message, code: err.code})
       } else {
         let stream = fs.createWriteStream(path.resolve(os.tmpdir(), backupKey));
+
         stream.write(data.Body);
 
-        console.log(os.freemem() / 1024 / 1024)
-        //TODO:return an error if space available on disk is less than backup size
-        resolve({error: 0, Body: data.Body, Length: data.ContentLength});
+        // Reject in case of an error in writing data
+        stream.on('error', err => {
+          reject({error: 1, message: err.message, code: err.code})
+          return
+        });
+
+        resolve({
+          error: 0,
+          filePath: path.resolve(os.tmpdir(), backupKey)
+        });
       };
     });
   })
@@ -68,7 +116,11 @@ function RestoreBackup(config, databaseToRestore) {
   if (isValidConfig) {
 
     let s3 = AWSSetup(config)
-    return downloadBackup(s3, config, databaseToRestore).then(console.log, console.log)
+    return downloadBackup(s3, config, databaseToRestore).then(result => {
+      return restore(config, result.filePath)
+    }, error => {
+      return Promise.reject({error: 1, message: error.message});
+    })
 
   } else {
     return Promise.reject({error: 1, message: "Invalid Configuration"})
@@ -80,7 +132,7 @@ function List(config) {
 
   if (isValidConfig) {
     let s3 = AWSSetup(config);
-    return fetchObjectsFromBucket(s3, config)
+    return listObjectsInBucket(s3, config)
   } else {
     return Promise.reject({error: 1, message: "Invalid Configuration"})
   }

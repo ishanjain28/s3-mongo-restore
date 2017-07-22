@@ -1,4 +1,5 @@
-const meow = require('meow'),
+const path = require('path'),
+  meow = require('meow'),
   chalk = require('chalk'),
   inquirer = require('inquirer'),
   escExit = require('esc-exit'),
@@ -10,18 +11,20 @@ const cli = meow(`
     $ s3-mongo-restore [<mongodburi|accessKey|secretKey|bucketName> ...]
 
   Options
-    -u, --uri         MongoDB URI
-    -a, --accessKey   S3 Access Key
-    -s, --secretKey   S3 Secret Key
-    -b, --bucketName  S3 Bucket Name
-    -r, --region      S3 Region
+    -u, --uri               MongoDB URI
+    -a, --accessKey         S3 Access Key
+    -s, --secretKey         S3 Secret Key
+    -b, --bucketName        S3 Bucket Name
+    -r, --region            S3 Region
+    -lff, --load-from-file  Load Configuration from a JSON file
 `, {
   alias: {
     u: "uri",
     a: "accessKey",
     s: "secretKey",
     b: "bucketName",
-    r: "region"
+    r: "region",
+    lff: "load-from-file"
   },
   string: ["accessKey", "uri", "secretKey", "bucketName"]
 })
@@ -43,7 +46,7 @@ function listBackups(backups, flags) {
     }
   ]).then(answer => {
 
-    // Start Download backup, Check for space before downloading
+    // Download and restore backups
     S3Restore
       .Restore(config, answer.backup)
       .then(result => {
@@ -74,7 +77,7 @@ function filterBackups(input, backups) {
       length = lineLength - margins;
 
     return {
-      name: `${index + 1}. ${Key} ${chalk.dim(Size)}MiB`,
+      name: `${chalk.dim(index + 1)}. ${Key} ${chalk.dim(`${Size} MiB`)}`,
       value: Key
     }
   })
@@ -84,10 +87,14 @@ function init(flags) {
 
   escExit();
 
-  const {u, a, s, b, r} = flags;
+  const u = flags.u,
+    a = flags.a,
+    s = flags.s,
+    b = flags.b,
+    r = flags.r,
+    loadFromFile = flags.lff
 
   if (u && a && s && b && r) {
-
     config = {
       mongodb: u,
       s3: {
@@ -97,19 +104,22 @@ function init(flags) {
         bucketName: b
       }
     }
-
-    S3Restore
-      .List(config)
-      .then(backups => {
-        // Show results in terminal
-        listBackups(backups, flags);
-
-      }, error => {
-        console.error("Error in fetching Databases", error);
-      })
+  } else if (loadFromFile) {
+    config = require(path.resolve(loadFromFile));
   } else {
     console.error("Missing Arguments");
+    return
   }
+
+  S3Restore
+    .List(config)
+    .then(backups => {
+      // Show results in terminal
+      listBackups(backups, flags);
+
+    }, error => {
+      console.error("Error in fetching Databases", error);
+    })
 }
 
 if (cli.input.length === 0) {

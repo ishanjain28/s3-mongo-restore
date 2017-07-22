@@ -53,16 +53,22 @@ function restore(config, filePath) {
       host = config.mongodb.hosts[0].host || null,
       port = config.mongodb.hosts[0].port || null;
 
+    let gzipFlag = "--gzip"
+
+    if (path.extname(filePath).toLowerCase() != ".gz") {
+      gzipFlag = ""
+    }
+
     // Default command, does not considers username or password
-    let command = `mongorestore -h ${host} --port=${port} -d ${database} --gzip --archive=${filePath}`;
+    let command = `mongorestore -h ${host} --port=${port} -d ${database} ${gzipFlag} --archive=${filePath}`;
 
     // When Username and password is provided
     if (username && password) {
-      command = `mongorestore -h ${host} --port=${port} -d ${database} -p ${password} -u ${username} --gzip --archive=${filePath}`;
+      command = `mongorestore -h ${host} --port=${port} -d ${database} -p ${password} -u ${username} ${gzipFlag} --archive=${filePath}`;
     }
     // When Username is provided
     if (username && !password) {
-      command = `mongorestore -h ${host} --port=${port} -d ${database} -u ${username} --gzip --archive=${filePath}`;
+      command = `mongorestore -h ${host} --port=${port} -d ${database} -u ${username} ${gzipFlag} --archive=${filePath}`;
     }
 
     exec(command, (err, stdout, stderr) => {

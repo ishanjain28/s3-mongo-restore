@@ -32,7 +32,6 @@
     "inquirer": "^3.1.1",
     "inquirer-autocomplete-prompt": "^0.11.0",
     "meow": "^3.7.0",
-    "mongodb-uri": "^0.9.7",
-    "num-sort": "^1.0.0"
+    "mongodb-uri": "^0.9.7"
   }
 }

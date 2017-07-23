@@ -1,9 +1,0 @@
- {
-     "mongodb": "mongodb://localhost:27017",
-     "s3": {
-         "secretKey": "",
-         "accessKey": "",
-         "region": "",
-         "bucketName": ""
-     }
- }

@@ -17,6 +17,18 @@ const cli = meow(`
     -b, --bucketName        S3 Bucket Name
     -r, --region            S3 Region
     -lff, --load-from-file  Load Configuration from a JSON file
+
+  Configuration File Example
+    {
+      mongodb: "mongodb://localhost:27017",
+        s3: {
+          secretKey: "<s3 secret key>",
+          accessKey: "<s3 access key>",
+          region: "<s3 region>",
+          bucketName: "<s3 bucket name>"
+        }      
+    }
+
 `, {
   alias: {
     u: "uri",
@@ -26,7 +38,7 @@ const cli = meow(`
     r: "region",
     lff: "load-from-file"
   },
-  string: ["accessKey", "uri", "secretKey", "bucketName"]
+  string: ["accessKey", "uri", "secretKey", "bucketName", "load-from-file"]
 })
 
 let config = {};
@@ -34,17 +46,15 @@ let config = {};
 function listBackups(backups, flags) {
   inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 
-  return inquirer.prompt([
-    {
-      name: "backup",
-      message: "Search in Available Backups on S3",
-      type: "autocomplete",
-      pageSize: 7,
-      source: (ans, input) => Promise
-        .resolve()
-        .then(() => filterBackups(input, backups, flags))
-    }
-  ]).then(answer => {
+  return inquirer.prompt([{
+    name: "backup",
+    message: "Search in Available Backups on S3",
+    type: "autocomplete",
+    pageSize: 7,
+    source: (ans, input) => Promise
+      .resolve()
+      .then(() => filterBackups(input, backups, flags))
+  }]).then(answer => {
 
     // Download and restore backups
     S3Restore

@@ -2,9 +2,15 @@
   "name": "s3-mongo-restore",
   "version": "1.0.0",
   "description": "Restore MongoDB Backups stored on S3 with a (Optional) Web GUI",
-  "main": "cli.js",
+  "main": "restore.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "s3mr": "cli.js"
+  },
+  "engines": {
+    "node": ">=4"
   },
   "repository": {
     "type": "git",

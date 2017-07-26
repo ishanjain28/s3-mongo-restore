@@ -1,3 +1,7 @@
+#!/usr/bin/env node
+
+'use strict';
+
 const path = require('path'),
   meow = require('meow'),
   chalk = require('chalk'),

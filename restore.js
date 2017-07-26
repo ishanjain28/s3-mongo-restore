@@ -5,10 +5,11 @@ const fs = require('fs'),
   AWS = require('aws-sdk'),
   MongoDBURI = require('mongodb-uri');
 
+// Validate Configuration
 function ValidateConfig(config) {
   if (config && config.mongodb && config.s3 && config.s3.accessKey && config.s3.secretKey && config.s3.region && config.s3.bucketName) {
 
-    // Check if the url isn't parsed already
+    // Don't try to parse the url when it has been parsed once
     if (!(config.mongodb.scheme && config.mongodb.hosts)) {
       config.mongodb = MongoDBURI.parse(config.mongodb);
     }
@@ -18,6 +19,7 @@ function ValidateConfig(config) {
   return false;
 }
 
+// Set up AWS
 function AWSSetup(config) {
   AWS
     .config
@@ -27,7 +29,7 @@ function AWSSetup(config) {
   return s3;
 }
 
-// Fetches All the keys in Database that start with database name
+// Fetch a list of all files from AWS
 function listObjectsInBucket(s3, config) {
   return new Promise((resolve, reject) => {
     s3.listObjects({
@@ -43,6 +45,7 @@ function listObjectsInBucket(s3, config) {
   });
 }
 
+// Restore downloaded database
 function restore(config, filePath) {
 
   return new Promise((resolve, reject) => {
@@ -74,7 +77,7 @@ function restore(config, filePath) {
     exec(command, (err, stdout, stderr) => {
       if (err) {
         // Most likely, mongodump isn't installed or isn't accessible
-        reject({error: 1, message: err.message, code: err.code});
+        reject({error: 1, code: err.code, message: err.message});
       } else {
         resolve({
           error: 0,
@@ -87,6 +90,7 @@ function restore(config, filePath) {
 
 }
 
+// Download Backup
 function downloadBackup(s3, config, backupKey) {
 
   return new Promise((resolve, reject) => {
@@ -95,7 +99,7 @@ function downloadBackup(s3, config, backupKey) {
       Key: backupKey
     }, (err, data) => {
       if (err) {
-        reject({error: 1, message: err.message, code: err.code})
+        reject({error: 1, code: err.code, message: err.message})
       } else {
         let stream = fs.createWriteStream(path.resolve(os.tmpdir(), backupKey));
 
@@ -116,6 +120,7 @@ function downloadBackup(s3, config, backupKey) {
   })
 };
 
+// Validate, Download, Restore Backup
 function RestoreBackup(config, databaseToRestore) {
   let isValidConfig = ValidateConfig(config);
 
@@ -133,6 +138,7 @@ function RestoreBackup(config, databaseToRestore) {
   }
 }
 
+// List Backups
 function List(config) {
   let isValidConfig = ValidateConfig(config);
 

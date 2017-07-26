@@ -2,13 +2,12 @@ const path = require('path'),
   meow = require('meow'),
   chalk = require('chalk'),
   inquirer = require('inquirer'),
-  escExit = require('esc-exit'),
   cliTruncate = require('cli-truncate'),
   S3Restore = require('./restore');
 
 const cli = meow(`
   Usage
-    $ s3-mongo-restore [<mongodburi|accessKey|secretKey|bucketName> ...]
+    $ s3mr [<mongodburi|accessKey|secretKey|bucketName> ...]
 
   Options
     -u, --uri               MongoDB URI
@@ -46,15 +45,17 @@ let config = {};
 function listBackups(backups, flags) {
   inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 
-  return inquirer.prompt([{
-    name: "backup",
-    message: "Search in Available Backups on S3",
-    type: "autocomplete",
-    pageSize: 7,
-    source: (ans, input) => Promise
-      .resolve()
-      .then(() => filterBackups(input, backups, flags))
-  }]).then(answer => {
+  return inquirer.prompt([
+    {
+      name: "backup",
+      message: "Search in Available Backups on S3",
+      type: "autocomplete",
+      pageSize: 7,
+      source: (ans, input) => Promise
+        .resolve()
+        .then(() => filterBackups(input, backups, flags))
+    }
+  ]).then(answer => {
 
     // Download and restore backups
     S3Restore
@@ -94,8 +95,6 @@ function filterBackups(input, backups) {
 }
 
 function init(flags) {
-
-  escExit();
 
   const u = flags.u,
     a = flags.a,

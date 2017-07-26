@@ -1,3 +1,5 @@
+'use strict';
+
 const fs = require('fs'),
   os = require('os'),
   path = require('path'),
@@ -34,7 +36,7 @@ function listObjectsInBucket(s3, config) {
   return new Promise((resolve, reject) => {
     s3.listObjects({
       Bucket: config.s3.bucketName,
-      // Prefix: config.mongodb.database
+      Prefix: config.mongodb.database || ""
     }, (err, data) => {
       if (err) {
         reject(err)

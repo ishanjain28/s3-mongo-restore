@@ -1,4 +1,7 @@
-const restore = require('../restore');
+// If you downloaded this module from npm, You'll want to use the next line
+const restore = require('s3-mongo-restore');
+// If you downloaded from github, Use the next line
+const restore = require('../restore.js')
 
 let config = {
     "mongodb": "mongodb://localhost:27017/freecodecamp",

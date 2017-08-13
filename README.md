@@ -12,8 +12,6 @@ Restore MongoDB Backups stored in S3, Using a CLI or directly in your code using
 
 ## As a CLI 
 
-## As a Library
-
     Usage
     $ s3mr [<mongodburi|accessKey|secretKey|bucketName> ...]
 
@@ -36,6 +34,8 @@ Restore MongoDB Backups stored in S3, Using a CLI or directly in your code using
             }      
         }
 
+
+## As a Library
 
 ### Import 
 

@@ -1,6 +1,8 @@
 # s3-mongo-restore
 Restore MongoDB Backups stored in S3, Using a CLI or directly in your code using this as a library
 
+![Imgur](http://i.imgur.com/59pSBFH.gifv)
+
 # Features
 
 - Download and Restore MongoDB Backups
@@ -85,8 +87,9 @@ MIT
 1. This module uses `mongorestore` to restore database, You need to have it installed on the machine on which you are using this module. 
 2. To backup the databases,
 
-    mongodump --host localhost --port=27017 --gzip --archive=\<path to backup.gz\>
+      
+        mongodump --host localhost --port=27017 --gzip --archive=<path to backup.gz>
 
-    //OR, in mongodump version 3.4+
+        // or, in mongodump version 3.4+
 
-    mongodump --uri=\<MongoDB URI\> --gzip --archive=\<path to backup.gz\>
+        mongodump --uri=\<MongoDB URI\> --gzip --archive=<path to backup.gz>

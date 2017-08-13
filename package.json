@@ -1,6 +1,6 @@
 {
   "name": "s3-mongo-restore",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Restore MongoDB Backups stored on S3 with a (Optional) Web GUI",
   "main": "restore.js",
   "scripts": {

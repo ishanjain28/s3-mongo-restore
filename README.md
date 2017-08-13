@@ -1,7 +1,11 @@
 # s3-mongo-restore
 Restore MongoDB Backups stored in S3, Using a CLI or directly in your code using this as a library
 
-![Imgur](http://i.imgur.com/59pSBFH.gifv)
+<h1 align="center">
+	<br>
+	<img width="550" src="http://i.imgur.com/59pSBFH.gif">
+	<br>
+</h1>
 
 # Features
 
